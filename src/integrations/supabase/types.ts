@@ -35,6 +35,30 @@ export type Database = {
         }
         Relationships: []
       }
+      forms: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          schema: Json
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          schema: Json
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          schema?: Json
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

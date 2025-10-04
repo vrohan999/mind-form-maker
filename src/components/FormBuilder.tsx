@@ -35,6 +35,7 @@ export default function FormBuilder() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [formSchema, setFormSchema] = useState<FormSchema | null>(null);
   const [showClarification, setShowClarification] = useState(false);
+  const [formId, setFormId] = useState<string | null>(null);
 
   const generateForm = async () => {
     if (!description.trim()) {
@@ -61,7 +62,24 @@ export default function FormBuilder() {
         setShowClarification(true);
         toast.info("We need some clarification about your form");
       } else {
-        toast.success("Form generated successfully!");
+        // Save form to database for sharing
+        const { data: savedForm, error: saveError } = await supabase
+          .from('forms')
+          .insert({
+            title: data.title || 'Untitled Form',
+            description: data.description || '',
+            schema: data
+          })
+          .select()
+          .single();
+
+        if (saveError) {
+          console.error('Error saving form:', saveError);
+          toast.error("Form generated but couldn't create shareable link");
+        } else {
+          setFormId(savedForm.id);
+          toast.success("Form generated successfully!");
+        }
       }
     } catch (error) {
       console.error('Error generating form:', error);
@@ -83,6 +101,15 @@ export default function FormBuilder() {
   const handleFormReset = () => {
     setFormSchema(null);
     setDescription("");
+    setFormId(null);
+  };
+
+  const handleCopyLink = () => {
+    if (formId) {
+      const shareUrl = `${window.location.origin}/form/${formId}`;
+      navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copied to clipboard!");
+    }
   };
 
   return (
@@ -158,10 +185,23 @@ export default function FormBuilder() {
           {/* Right Panel - Preview */}
           <Card className="p-6 shadow-strong animate-scale-in" style={{ animationDelay: '0.1s' }}>
             <div className="space-y-2 mb-6">
-              <h2 className="text-2xl font-semibold flex items-center gap-2">
-                <span className="text-3xl">👁️</span>
-                Live Preview
-              </h2>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl">👁️</span>
+                  <h2 className="text-2xl font-semibold">Live Preview</h2>
+                </div>
+                {formSchema?.type === 'form' && formId && (
+                  <Button
+                    onClick={handleCopyLink}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <span className="text-lg">🔗</span>
+                    Copy Link
+                  </Button>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground">
                 Your form will appear here in real-time
               </p>

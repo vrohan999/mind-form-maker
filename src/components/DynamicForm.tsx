@@ -31,9 +31,10 @@ interface FormSchema {
 interface DynamicFormProps {
   schema: FormSchema;
   onReset: () => void;
+  formId?: string;
 }
 
-export default function DynamicForm({ schema, onReset }: DynamicFormProps) {
+export default function DynamicForm({ schema, onReset, formId }: DynamicFormProps) {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,7 +94,8 @@ export default function DynamicForm({ schema, onReset }: DynamicFormProps) {
         .from('form_submissions')
         .insert({
           form_title: schema.title || 'Untitled Form',
-          form_data: formData
+          form_data: formData,
+          form_id: formId || null
         });
 
       if (error) throw error;
