@@ -57,6 +57,10 @@ export default function SharedForm() {
           return;
         }
 
+        if (!data.accepting_responses) {
+          toast.error("This form is no longer accepting responses");
+        }
+
         setFormSchema(data.schema as unknown as FormSchema);
       } catch (error) {
         console.error('Error:', error);

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import DynamicForm from "./DynamicForm";
 import ClarificationDialog from "./ClarificationDialog";
@@ -31,11 +32,34 @@ interface FormSchema {
 }
 
 export default function FormBuilder() {
+  const navigate = useNavigate();
   const [description, setDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [formSchema, setFormSchema] = useState<FormSchema | null>(null);
   const [showClarification, setShowClarification] = useState(false);
   const [formId, setFormId] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Check authentication
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate("/auth");
+      } else {
+        setUser(session.user);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) {
+        navigate("/auth");
+      } else {
+        setUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const generateForm = async () => {
     if (!description.trim()) {
@@ -63,12 +87,19 @@ export default function FormBuilder() {
         toast.info("We need some clarification about your form");
       } else {
         // Save form to database for sharing
+        if (!user) {
+          toast.error("You must be logged in to create forms");
+          return;
+        }
+
         const { data: savedForm, error: saveError } = await supabase
           .from('forms')
           .insert({
             title: data.title || 'Untitled Form',
             description: data.description || '',
-            schema: data
+            schema: data,
+            user_id: user.id,
+            accepting_responses: true
           })
           .select()
           .single();
@@ -114,6 +145,18 @@ export default function FormBuilder() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Brain className="w-6 h-6 text-primary" />
+            <h1 className="text-xl font-bold">Mind Form Maker</h1>
+          </div>
+          <Button onClick={() => navigate("/")} variant="outline">
+            My Forms
+          </Button>
+        </div>
+      </header>
+
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12 animate-fade-in">
@@ -121,9 +164,9 @@ export default function FormBuilder() {
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium text-primary">AI-Powered</span>
           </div>
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Dynamic Form Builder
-          </h1>
+          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            Create a New Form
+          </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Describe your form in natural language, and watch AI build it instantly
           </p>

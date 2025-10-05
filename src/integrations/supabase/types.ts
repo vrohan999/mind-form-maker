@@ -18,44 +18,61 @@ export type Database = {
         Row: {
           created_at: string
           form_data: Json
+          form_id: string | null
           form_title: string
           id: string
         }
         Insert: {
           created_at?: string
           form_data: Json
+          form_id?: string | null
           form_title: string
           id?: string
         }
         Update: {
           created_at?: string
           form_data?: Json
+          form_id?: string | null
           form_title?: string
           id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       forms: {
         Row: {
+          accepting_responses: boolean | null
           created_at: string
           description: string | null
           id: string
           schema: Json
           title: string
+          user_id: string | null
         }
         Insert: {
+          accepting_responses?: boolean | null
           created_at?: string
           description?: string | null
           id?: string
           schema: Json
           title: string
+          user_id?: string | null
         }
         Update: {
+          accepting_responses?: boolean | null
           created_at?: string
           description?: string | null
           id?: string
           schema?: Json
           title?: string
+          user_id?: string | null
         }
         Relationships: []
       }
