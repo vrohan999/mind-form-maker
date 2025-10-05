@@ -25,7 +25,8 @@ const Auth = () => {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      // Only redirect on actual sign in, not on sign up
+      if (event === 'SIGNED_IN' && session) {
         navigate("/");
       }
     });
@@ -50,8 +51,12 @@ const Auth = () => {
 
       toast({
         title: "Success!",
-        description: "Account created successfully. You can now sign in.",
+        description: "Account created! Please switch to the Sign In tab to log in.",
       });
+      
+      // Clear form fields after successful signup
+      setEmail("");
+      setPassword("");
     } catch (error: any) {
       toast({
         title: "Error",

@@ -51,7 +51,6 @@ const Dashboard = () => {
         navigate("/auth");
       } else {
         setUser(session.user);
-        fetchForms();
       }
     });
 
@@ -66,11 +65,21 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Fetch forms when user is set
+  useEffect(() => {
+    if (user) {
+      fetchForms();
+    }
+  }, [user]);
+
   const fetchForms = async () => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
         .from("forms")
         .select("*")
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
